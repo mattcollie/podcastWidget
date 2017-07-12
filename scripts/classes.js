@@ -1,13 +1,43 @@
-var PodcastControl = function(div) {
-    var URL = 'https://feed.podcastmachine.com/podcasts/21337.json',
+var PodcastControl = function(url) {
+    var _url = url,
         videoData,
         shouldShowLoader,
-        _control = { };
+        _control = { 
+            container:createContainer() 
+        };
     
     loadData(function(result){ 
         videoData = result;
         loadControls();
     });
+
+    return _control.container;
+
+    function getDescriptionAndSpeaker(episode) {
+        var description = episode.substring(0, episode.indexOf('Speaker:'));
+        var speaker = episode.substring(episode.indexOf('Speaker:'));
+        return {description:description, speaker:speaker};
+    }
+
+    function createContainer() {
+        var container = document.createElement("div");
+        return container;
+    }
+
+    function createTable() {
+        var table = document.createElement("table");
+        return table;
+    }
+
+    function createTR() {
+        var tr = document.createElement('tr');
+        return tr;
+    }
+
+    function createTD() {
+        var td = document.createElement('td');
+        return td;
+    }
 
     function createTitle() {
         var titleDiv = document.createElement("div"); 
@@ -38,13 +68,17 @@ var PodcastControl = function(div) {
     }
 
     function createListULControl() {
+        var container = createContainer();
         var listul = document.createElement('ul');
         for(var key in videoData.episodes) {
             var listli = createListLIControl(videoData.episodes[key]);
             listul.appendChild(listli);
         }
         
-        return listul;
+        container.appendChild(listul);
+        container.style.maxHeight = '450px';
+        container.style.overflow = 'auto';
+        return container;
     }
 
     function createListLIControl(audioData) {
@@ -58,7 +92,10 @@ var PodcastControl = function(div) {
                 _control.audioContainer.play();
             }
         })(audioData));
-        listli.textContent = audioData.title;
+        var a = document.createElement('a')
+        a.setAttribute('href', '#');
+        a.appendChild(createEpisodeContainer(audioData));
+        listli.appendChild(a);
         return listli;
     }
 
@@ -75,6 +112,91 @@ var PodcastControl = function(div) {
         return loader;
     }
 
+    function createEpisodeContainer(episode) {
+        var container = createContainer();
+        var table = createTable();
+        var row = createTR();
+        var tdImage = createTD();
+        var imgContainer = createImageContainer(episode);
+        var tdContent = createTD();
+        var contentContainer = createContentContainer(episode);
+        tdImage.appendChild(imgContainer);
+        tdContent.appendChild(contentContainer);
+        row.appendChild(tdImage);
+        row.appendChild(tdContent);
+        table.appendChild(row);
+        container.appendChild(table);
+        container.style.backgroundColor = 'rgb(50,50,50)';
+        container.style.position = 'relative';
+        container.style.borderRadius = '2px';
+        return container;
+    }
+
+    function createImageContainer(episode) {
+        var imgContainer = createContainer();
+        var img = document.createElement('img');
+        img.src = episode.image;
+        img.style.zIndex = '1';
+        img.style.display = 'block';
+        img.style.maxWidth = '128px';
+        img.style.maxHeight = '64px';
+        img.style.width = 'auto';
+        img.style.height = 'auto';
+        img.style.margin = 'auto';
+        var timeCounter = createContainer();
+        timeCounter.textContent = episode.duration;
+        timeCounter.style.position = 'absolute';
+        timeCounter.style.top = '0px';
+        timeCounter.style.right = '0px';
+        timeCounter.style.zIndex = '100';
+        timeCounter.style.padding = '2px';
+        timeCounter.style.backgroundColor = 'rgba(0,0,0, 0.6)';
+        timeCounter.style.color = 'white';
+        timeCounter.style.borderRadius = '2px';
+        timeCounter.style.fontSize = '12';
+        imgContainer.appendChild(img);
+        imgContainer.appendChild(timeCounter);
+        imgContainer.style.width = '64';
+        imgContainer.style.height = '64';
+        imgContainer.style.overflow = 'hidden';
+        imgContainer.style.display = 'inline-block';
+        imgContainer.style.position = 'relative';
+        imgContainer.style.margin = 'auto';
+        return imgContainer;
+    }
+
+    function createContentContainer(episode) {
+        var container = createContainer();
+        var titleContainer = createContainer();
+        titleContainer.textContent = episode.title;
+        titleContainer.style.top = '0';
+        titleContainer.style.fontSize = '18px';
+        titleContainer.style.fontWeight = 'bold';
+        titleContainer.style.color = 'rgb(200,200,200)';
+        var info = getDescriptionAndSpeaker(episode.description);
+        var descriptionSpeakerContainer = createContainer();
+        var descriptionContainer = createContainer();
+        descriptionContainer.textContent = info.description;
+        descriptionContainer.style.color = 'rgb(200,200,200)';
+        var speakerContainer = createContainer();
+        speakerContainer.textContent = info.speaker;
+        speakerContainer.style.fontSize = '12px';
+        speakerContainer.style.position = 'absolute';
+        speakerContainer.style.bottom = '0px';
+        speakerContainer.style.left = '0px';
+        speakerContainer.style.color = 'rgb(200,200,200)';
+        descriptionSpeakerContainer.style.position = 'relative';
+        descriptionSpeakerContainer.style.minHeight = '50px';
+        descriptionSpeakerContainer.appendChild(descriptionContainer);
+        descriptionSpeakerContainer.appendChild(speakerContainer);
+        container.appendChild(titleContainer);
+        container.appendChild(descriptionSpeakerContainer);
+        container.style.display = 'inline-block';
+        container.style.top = '0px';
+        container.style.position = 'absolute';
+        return container;
+    }
+
     function showLoader() {
         _control.loader.style.display = 'block';
         _control.list.style.display = 'none';
@@ -86,7 +208,7 @@ var PodcastControl = function(div) {
     }
 
     function loadData(callback) {
-        $.getJSON(URL, callback);
+        $.getJSON(_url, callback);
     }
 
     function loadControls() { 
@@ -97,9 +219,12 @@ var PodcastControl = function(div) {
         _control.audioSource = audioContainer.audioSource;
         _control.list = createListULControl();
         _control.loader = createLoadingShow();
-        div.appendChild(_control.title);
-        div.appendChild(_control.audioContainer);
-        div.appendChild(_control.loader);
-        div.appendChild(_control.list);
+        _control.container.appendChild(_control.title);
+        _control.container.appendChild(_control.audioContainer);
+        _control.container.appendChild(_control.loader);
+        _control.container.appendChild(_control.list);
+        _control.container.style.backgroundColor = 'rgb(25,25,25)';
+        _control.container.style.maxHeight = '500px';
+        _control.container.style.overflow = 'hidden';
     }
 }

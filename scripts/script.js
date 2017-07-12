@@ -4,5 +4,6 @@
 
 function onBodyLoad() {
     console.log("DEBUG:: onBodyLoad");
-    PodcastControl(document.getElementById('audioControl'));
+    var control = PodcastControl('https://feed.podcastmachine.com/podcasts/21337.json');
+    document.getElementById('audioControl').appendChild(control);
 }
