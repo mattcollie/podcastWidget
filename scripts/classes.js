@@ -70,6 +70,7 @@ var PodcastControl = function(url) {
     function createListULControl() {
         var container = createContainer();
         var listul = document.createElement('ul');
+        listul.style['list-style-type'] = 'none';
         for(var key in videoData.episodes) {
             var listli = createListLIControl(videoData.episodes[key]);
             listul.appendChild(listli);
@@ -83,6 +84,7 @@ var PodcastControl = function(url) {
 
     function createListLIControl(audioData) {
         var listli = document.createElement('li');
+        listli.style.paddingBottom = '10px';
         listli.addEventListener('click', (function(data){
             return function() {
                 shouldShowLoader = true;
